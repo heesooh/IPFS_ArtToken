@@ -1,25 +1,25 @@
 import React, { Component } from "react";
 import DigitalArtContract from "./contracts/DigitalArt.json";
 import getWeb3 from "./getWeb3";
-
-import "./App.css";
 import ipfs from './ipfs'
+import "./App.css";
 
 class App extends Component {
   constructor(props) {
     super(props)
 
     this.state = {
-      storageValue: "default value", 
       web3: null, 
       accounts: null, 
       contract: null,
       buffer: null,
-      ipfsHash: ''
+      ipfsHash: '',
+      recipient: ''
     };
 
     this.captureFile = this.captureFile.bind(this);
     this.onSubmit = this.onSubmit.bind(this);
+    this.handleChange = this.handleChange.bind(this);
   }
 
   componentDidMount = async () => {
@@ -35,8 +35,7 @@ class App extends Component {
         DigitalArtContract.abi,
         deployedNetwork && deployedNetwork.address,
       );
-      // Set web3, accounts, and contract to the state, and then proceed with an
-      // example of interacting with the contract's methods.
+      // Set web3, accounts, and contract to the state
       this.setState({ web3, accounts, contract: instance });
     } catch (error) {
       // Catch any errors for any of the above operations.
@@ -73,14 +72,23 @@ class App extends Component {
       this.setState({ ipfsHash: result[0].hash })
       console.log('IPFS Hash', this.state.ipfsHash)
       console.log(`https://ipfs.io/ipfs/${this.state.ipfsHash}`)
+      console.log('Accounts[0]', this.state.accounts[0])
+      console.log('Recipient Address', this.state.recipient)
     })
     // define asynchronous contract method
     const tokenize = async () => {
       const { accounts, contract } = this.state;
-      await contract.methods.mint(accounts[0], `https://ipfs.io/ipfs/${this.state.ipfsHash}`).send({ from: accounts[0] });
+      await contract.methods.mint(this.state.recipient, `https://ipfs.io/ipfs/${this.state.ipfsHash}`).send({ from: accounts[0] });
     };
     // call contract method
     tokenize()
+  }
+
+  // updates the recipient's address
+  handleChange(event) {
+    event.preventDefault()
+    this.setState({recipient: event.target.value});
+    console.log('Input Value', this.state.recipient)
   }
 
   render() {
@@ -91,26 +99,16 @@ class App extends Component {
       <div className="App">
         <h1>Your Image</h1>
         <p>This image is stored on IPFS & Ethereum Blockchain!</p>
-        <img src={`https://ipfs.io/ipfs/${this.state.ipfsHash}`} alt=""/>
         <h2>Upload Image</h2>
         <form onSubmit={this.onSubmit} >
           <input type='file' onChange={this.captureFile} />
+          <input type='text' onChange={this.handleChange} />
           <input type='submit' />
         </form>
-        {/* <div>The stored value is: {this.state.storageValue}</div> */}
+        <img src={`https://ipfs.io/ipfs/${this.state.ipfsHash}`} alt=""/>
       </div>
     );
   }
 }
 
 export default App;
-
-  // runExample = async () => {
-  //   const { accounts, contract } = this.state;
-  //   // Stores a given value, 5 by default.
-  //   await contract.methods.set("IPFS Hash").send({ from: accounts[0] });
-  //   // Get the value from the contract to prove it worked.
-  //   const response = await contract.methods.get().call();
-  //   // Update state with the result.
-  //   this.setState({ storageValue: response });
-  // };
