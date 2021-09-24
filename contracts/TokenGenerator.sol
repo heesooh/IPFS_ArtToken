@@ -7,14 +7,15 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract TokenGenerator {
     Token[] tokens;
-
-    event printAddress(address value);
     
-    function createToken(address _recipient, string memory _tokenDescription, string memory _tokenID, string memory _uri) external {
+    event printAddress(address value);
+
+    function createToken(address _recipient, string memory _tokenDescription, string memory _tokenID, string memory _uri) external returns(address) {
         Token token = new Token(_tokenDescription, _tokenID);
         tokens.push(token);
-        emit printAddress(address(token));
         token.mint(_recipient, _uri);
+        emit printAddress(address(token));
+        return address(token);
     }
 }
 
