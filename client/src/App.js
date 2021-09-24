@@ -1,8 +1,9 @@
 import React, { Component } from "react";
+import { NFTStorage, File } from 'nft.storage';
 // import DigitalArtContract from "./contracts/DigitalArt.json";
 import TokenGenerator from "./contracts/TokenGenerator.json";
 import getWeb3 from "./getWeb3";
-import ipfs from './ipfs'
+// import ipfs from './ipfs'
 import "./App.css";
 
 class App extends Component {
@@ -13,15 +14,12 @@ class App extends Component {
       web3: null, 
       accounts: null, 
       contract: null,
-      imageBuffer: null,
-      metadataBuffer: null,
-      imageURI: '',
-      metadataURI: '',
+      metadata: null,
+      artwork: null,
       recipient: '',
       tokenID: '',
       tokenName: '',
       tokenDescription: '',
-      metadata: null
     };
 
     this.captureFile = this.captureFile.bind(this);
@@ -61,54 +59,28 @@ class App extends Component {
   // conver file into buffer so ipfs-api can read it
   captureFile(event) {
     event.preventDefault()
-    //get the first file
-    const file = event.target.files[0]
-    //get the file reader
-    const reader = new window.FileReader()
-    //convert file to array that buffer will understand
-    reader.readAsArrayBuffer(file)
-    reader.onloadend = () => {
-      this.setState({ imageBuffer: Buffer(reader.result) })
-      console.log('Image Buffer', this.state.imageBuffer)
-    }
+    this.setState({ artwork: event.target.files[0] })
   }
 
   // obtain the ipfs hash from the buffer created above
   onSubmit(event) {
     event.preventDefault()
-    ipfs.files.add(this.state.imageBuffer, (error, result) => {
-      if(error) {
-        console.error(error)
-        return
-      }
-      this.setState({ imageURI: `https://ipfs.io/ipfs/${result[0].hash}` })
-      
-      var metadataObj = {
+    // create ipfs & metadata then pin the data on the nft.storage
+    const tokenize = async () => {
+      require('dotenv').config()
+      const client = new NFTStorage({ token: process.env.REACT_APP_SECRET_APIKEY })
+      const metadata = await client.store({
         name: this.state.tokenName,
         description: this.state.tokenDescription,
-        image: this.state.imageURI,
-      };
-      var metadataBuf = Buffer.from(JSON.stringify(metadataObj))
-
-      this.setState({ metadata: metadataObj })
-      this.setState({ metadataBuffer: metadataBuf})
-
-      ipfs.files.add(this.state.metadataBuffer, (error, result) => {
-        if(error) {
-          console.error(error)
-          return
-        }
-        this.setState({ metadataURI: `https://ipfs.io/ipfs/${result[0].hash}` })
-        console.log(this.state.metadataURI)
-
-        const tokenize = async () => {
-          const { accounts, contract } = this.state;
-          const tokenAddress = await contract.methods.createToken(this.state.recipient, this.state.tokenDescription, this.state.tokenID, this.state.metadataURI).send({ from: accounts[0] });
-          console.log(tokenAddress)
-        };
-        tokenize()
+        image: new File([this.state.artwork], this.state.artwork.name, { type: this.state.artwork.type })
       })
-    })
+      // call the smart contract method
+      const { accounts, contract } = this.state;
+      await contract.methods.createToken(this.state.recipient, this.state.tokenDescription, this.state.tokenID, metadata.url).send({ from: accounts[0] });
+
+      //#TODO print out the address of the newly created token
+    };
+    tokenize()
   }
 
   // updates the recipient's address
@@ -161,7 +133,7 @@ class App extends Component {
           </div>
           <input type='submit'/>
         </form>
-        <img src={this.state.imageURI} alt=""/>
+        {/* <img src={this.state.imageURI} alt=""/> */}
       </div>
     );
   }
