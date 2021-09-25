@@ -11,14 +11,14 @@ class App extends Component {
     super(props)
 
     this.state = {
-      web3: null, 
-      accounts: null, 
-      contract: null,
-      metadata: null,
+      web3: null,
+      results: null,
       artwork: null,
-      recipient: '',
+      accounts: null,
+      contract: null,
       tokenID: '',
       tokenName: '',
+      recipient: '',
       tokenDescription: '',
     };
 
@@ -76,9 +76,18 @@ class App extends Component {
       })
       // call the smart contract method
       const { accounts, contract } = this.state;
-      await contract.methods.createToken(this.state.recipient, this.state.tokenDescription, this.state.tokenID, metadata.url).send({ from: accounts[0] });
+      const result = await contract.methods.createToken(this.state.recipient, this.state.tokenDescription, this.state.tokenID, metadata.url).send({ from: accounts[0] });
 
-      //#TODO print out the address of the newly created token
+      // output metadata & artwork ipfs link
+      console.log('Artwork  Link', `ipfs.io/ipfs/${metadata.data.image.pathname.slice(2)}`)
+      console.log('Metadata Link', `ipfs.io/ipfs/${metadata.ipnft}/metadata.json`)
+      console.log('Token Address', result.events.printAddress.returnValues.value)
+      const links = {
+        artwork_link: `ipfs.io/ipfs/${metadata.data.image.pathname.slice(2)}`,
+        metadata_link: `ipfs.io/ipfs/${metadata.ipnft}/metadata.json`,
+        token_address: result.events.printAddress.returnValues.value
+      }
+      this.setState({ results: links })
     };
     tokenize()
   }
@@ -133,7 +142,6 @@ class App extends Component {
           </div>
           <input type='submit'/>
         </form>
-        {/* <img src={this.state.imageURI} alt=""/> */}
       </div>
     );
   }
