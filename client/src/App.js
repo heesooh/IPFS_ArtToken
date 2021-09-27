@@ -96,34 +96,51 @@ class App extends Component {
   changeRecipient(event) {
     event.preventDefault()
     this.setState({recipient: event.target.value});
-    console.log('Input Value', this.state.recipient)
+    // console.log('Input Value', this.state.recipient)
   }
 
   // updates the token ID
   changeTokenID(event) {
     event.preventDefault()
     this.setState({tokenID: event.target.value});
-    console.log('Input Value', this.state.tokenID)
+    // console.log('Input Value', this.state.tokenID)
   }
 
   // updates the token Name
   changeTokenName(event) {
     event.preventDefault()
     this.setState({tokenName: event.target.value});
-    console.log('Input Value', this.state.tokenName)
+    // console.log('Input Value', this.state.tokenName)
   }
 
   // updates the token description
   changeTokenDescription(event) {
     event.preventDefault()
     this.setState({tokenDescription: event.target.value});
-    console.log('Input Value', this.state.tokenDescription)
+    // console.log('Input Value', this.state.tokenDescription)
   }
 
   render() {
+    let links = this.state.results;
     if (!this.state.web3) {
       return <div>Loading Web3, accounts, and contract...</div>;
     }
+    const returnResults = () => {
+      if (links == null) {
+        return <label>Results is null.</label>;
+      } else {
+        return (
+          <div>
+            <label>Artowkr Link:</label>
+            <input type='text' value={links.artwork_link} />
+            <label>Metadata Link:</label>
+            <input type='text' value={links.metadata_link} />
+            <label>Token address:</label>
+            <input type='text' value={links.token_address} />
+          </div>
+        )}
+    }
+
     return (
       <div className="App">
         <h1>Digital Artwork Minter</h1>
@@ -141,6 +158,9 @@ class App extends Component {
             <input type='text' onChange={this.changeTokenDescription} />
           </div>
           <input type='submit'/>
+        </form>
+        <form>
+          {returnResults()}
         </form>
       </div>
     );
