@@ -127,7 +127,7 @@ class App extends Component {
     }
     const returnResults = () => {
       if (links == null) {
-        return <label>Results is null.</label>;
+        return <label>You will find your artwork info here after transaction.</label>;
       } else {
         return (
           <div>
