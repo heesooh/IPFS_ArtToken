@@ -9,13 +9,14 @@ contract TokenGenerator {
     Token[] tokens;
     
     event printAddress(address value);
+    event printTokenID(uint256 value);
 
-    function createToken(address _recipient, string memory _tokenDescription, string memory _tokenID, string memory _uri) external returns(address) {
-        Token token = new Token(_tokenDescription, _tokenID);
+    function createToken(address _recipient, string memory _tokenDescription, string memory _tokenSymbol, string memory _uri) external {
+        Token token = new Token(_tokenDescription, _tokenSymbol);
         tokens.push(token);
-        token.mint(_recipient, _uri);
+        uint256 tokenID = token.mint(_recipient, _uri);
         emit printAddress(address(token));
-        return address(token);
+        emit printTokenID(tokenID);
     }
 }
 
@@ -29,7 +30,7 @@ contract Token is ERC721, Ownable {
         string uri;
     }
     
-    constructor(string memory _tokenDescription, string memory _tokenID) ERC721(_tokenDescription, _tokenID) {}
+    constructor(string memory _tokenDescription, string memory _tokenSymbol) ERC721(_tokenDescription, _tokenSymbol) {}
     
     function _setTokenURI(uint256 tokenId, string memory _tokenURI) internal {
         _tokenURIs[tokenId] = _tokenURI;
@@ -55,10 +56,11 @@ contract Token is ERC721, Ownable {
         return allTokens;
     } 
     
-    function mint(address recipient, string memory uri) public onlyOwner() {
+    function mint(address recipient, string memory uri) public onlyOwner() returns(uint256) {
         _tokenIds.increment();
         uint256 newId = _tokenIds.current();
         _mint(recipient, newId);
         _setTokenURI(newId, uri);
+        return newId;
     }
 }

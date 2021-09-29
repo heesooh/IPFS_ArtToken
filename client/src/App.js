@@ -16,7 +16,7 @@ class App extends Component {
       artwork: null,
       accounts: null,
       contract: null,
-      tokenID: '',
+      tokenSymbol: '',
       tokenName: '',
       recipient: '',
       tokenDescription: '',
@@ -25,7 +25,7 @@ class App extends Component {
     this.captureFile = this.captureFile.bind(this);
     this.onSubmit = this.onSubmit.bind(this);
     this.changeRecipient = this.changeRecipient.bind(this);
-    this.changeTokenID = this.changeTokenID.bind(this);
+    this.changeTokenSymbol = this.changeTokenSymbol.bind(this);
     this.changeTokenName = this.changeTokenName.bind(this);
     this.changeTokenDescription = this.changeTokenDescription.bind(this);
   }
@@ -76,16 +76,21 @@ class App extends Component {
       })
       // call the smart contract method
       const { accounts, contract } = this.state;
-      const result = await contract.methods.createToken(this.state.recipient, this.state.tokenDescription, this.state.tokenID, metadata.url).send({ from: accounts[0] });
+      console.log('accounts:', accounts)
+      console.log('contract:', contract)
+      const result = await contract.methods.createToken(this.state.recipient, this.state.tokenDescription, this.state.tokenSymbol, metadata.url).send({ from: accounts[0] });
 
+      console.log('result', result)
       // output metadata & artwork ipfs link
       console.log('Artwork  Link', `ipfs.io/ipfs/${metadata.data.image.pathname.slice(2)}`)
       console.log('Metadata Link', `ipfs.io/ipfs/${metadata.ipnft}/metadata.json`)
       console.log('Token Address', result.events.printAddress.returnValues.value)
+      console.log('Token ID', result.events.printTokenID.returnValues.value)
       const links = {
         artwork_link: `ipfs.io/ipfs/${metadata.data.image.pathname.slice(2)}`,
         metadata_link: `ipfs.io/ipfs/${metadata.ipnft}/metadata.json`,
-        token_address: result.events.printAddress.returnValues.value
+        token_address: result.events.printAddress.returnValues.value,
+        token_ID: result.events.printTokenID.returnValues.value
       }
       this.setState({ results: links })
     };
@@ -100,10 +105,10 @@ class App extends Component {
   }
 
   // updates the token ID
-  changeTokenID(event) {
+  changeTokenSymbol(event) {
     event.preventDefault()
-    this.setState({tokenID: event.target.value});
-    // console.log('Input Value', this.state.tokenID)
+    this.setState({tokenSymbol: event.target.value});
+    // console.log('Input Value', this.state.tokenSymbol)
   }
 
   // updates the token Name
@@ -127,7 +132,7 @@ class App extends Component {
     }
     const returnResults = () => {
       if (links == null) {
-        return <label>You will find your artwork info here after transaction.</label>;
+        return <label>You will find your NFT information here after the transaction.</label>;
       } else {
         return (
           <div>
@@ -137,6 +142,8 @@ class App extends Component {
             <input type='text' value={links.metadata_link} />
             <label>Token address:</label>
             <input type='text' value={links.token_address} />
+            <label>Token ID:</label>
+            <input type='text' value={links.token_ID} />
           </div>
         )}
     }
@@ -150,8 +157,8 @@ class App extends Component {
           <div>
             <label>Recipient :</label>
             <input type='text' onChange={this.changeRecipient} />
-            <label>Token ID :</label>
-            <input type='text' onChange={this.changeTokenID} />
+            <label>Token Symbol :</label>
+            <input type='text' onChange={this.changeTokenSymbol} />
             <label>Token Name :</label>
             <input type='text' onChange={this.changeTokenName} />
             <label>Token Description :</label>
